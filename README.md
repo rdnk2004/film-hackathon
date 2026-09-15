@@ -28,9 +28,10 @@ Everything is controlled seamlessly client-side with instant state toggling:
 
 | Action | Control / Shortcut | Notes |
 | :--- | :--- | :--- |
-| **Reveal Results** | Click **"Reveal Results"** or press <kbd>Space</kbd> / <kbd>Enter</kbd> | Smooth 500ms cinematic transition to Screen 2 with soft audio sweep |
-| **Reset for Retake** | Press <kbd>R</kbd>, <kbd>Esc</kbd>, or click **↺ Reset Screen** | Instantly resets to Screen 1 for another take without refreshing |
-| **Fullscreen** | Press <kbd>F11</kbd> or <kbd>F</kbd> | Removes all browser chrome and window borders |
+| **Stage 1: Show Button** | Press <kbd>Space</kbd> or <kbd>Enter</kbd> | The glowing **"Reveal Results"** button smoothly appears into the poster |
+| **Stage 2: Reveal Winners** | Press <kbd>Space</kbd> again or click **"Reveal Results"** | Smooth 500ms cinematic transition to Screen 2 with soft audio sweep |
+| **Reset for Retake** | Press <kbd>R</kbd>, <kbd>Esc</kbd>, or click **↺ Reset Screen** | Instantly resets all the way back to initial clean poster (no button) |
+| **Fullscreen** | Press <kbd>F11</kbd> or <kbd>F</kbd> (or click **⛶ Fullscreen**) | Removes all browser window chrome for a clean sensor shot |
 
 ---
 
@@ -40,7 +41,7 @@ Everything is controlled seamlessly client-side with instant state toggling:
 - Eyebrow: `RCSS — DEPARTMENT OF COMPUTER SCIENCE PRESENTS`
 - Title: `HACK-A-THON`
 - Subtitle: `Day 1 — Ideation Phase Results`
-- Centered Button: `Reveal Results`
+- Button Slot: Hidden initially -> Blooms into view upon first <kbd>Space</kbd> press
 
 ### Screen 2 — Winner Announcement
 - Badge: `WINNER — IDEATION PHASE`
@@ -49,5 +50,6 @@ Everything is controlled seamlessly client-side with instant state toggling:
   - `Prithvin`
   - `Sreerag Belraj`
   - `Aldrin`
-  - `Gommal`
+  - `Sreerag S`
 - Congratulatory line: `Congratulations!`
+
