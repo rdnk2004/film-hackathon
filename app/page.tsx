@@ -67,6 +67,7 @@ const exitNativeFullscreen = async (): Promise<void> => {
 };
 
 export default function HackathonRevealPage() {
+  const [isButtonVisible, setIsButtonVisible] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSimulatedFullscreen, setIsSimulatedFullscreen] = useState(false);
@@ -122,6 +123,36 @@ export default function HackathonRevealPage() {
     }
   }, []);
 
+  // Soft pop/click tone when button appears
+  const playButtonAppearAudio = useCallback(() => {
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(560, ctx.currentTime + 0.12);
+
+      gain.gain.setValueAtTime(0.01, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch {
+      // Audio is non-blocking and completely optional
+    }
+  }, []);
+
   const handleReveal = useCallback(() => {
     playCinematicAudio();
     setIsRevealed(true);
@@ -129,6 +160,7 @@ export default function HackathonRevealPage() {
 
   const handleReset = useCallback(() => {
     setIsRevealed(false);
+    setIsButtonVisible(false);
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
@@ -177,9 +209,18 @@ export default function HackathonRevealPage() {
         } else {
           handleReset();
         }
-      } else if ((e.key === 'Enter' || e.key === ' ') && !isRevealed) {
+      } else if (e.key === ' ' || e.code === 'Space' || e.key === 'Enter') {
         e.preventDefault();
-        handleReveal();
+        if (!isRevealed) {
+          if (!isButtonVisible) {
+            // First space press: show the "Reveal Results" button
+            playButtonAppearAudio();
+            setIsButtonVisible(true);
+          } else {
+            // Second space press: reveal the winners
+            handleReveal();
+          }
+        }
       } else if (e.key === 'f' || e.key === 'F') {
         toggleFullscreen();
       }
@@ -187,7 +228,7 @@ export default function HackathonRevealPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRevealed, isSimulatedFullscreen, handleReset, handleReveal, toggleFullscreen]);
+  }, [isRevealed, isButtonVisible, isSimulatedFullscreen, handleReset, handleReveal, playButtonAppearAudio, toggleFullscreen]);
 
   return (
     <main className={`main-viewport ${isSimulatedFullscreen ? 'simulated-fullscreen' : ''}`}>
@@ -226,28 +267,32 @@ export default function HackathonRevealPage() {
           {/* Subtitle */}
           <p className="hackathon-subtitle">Day 1 — Ideation Phase Results</p>
 
-          {/* Reveal Button */}
-          <button
-            id="reveal-results-button"
-            type="button"
-            onClick={handleReveal}
-            className="reveal-btn"
-            autoFocus
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-            <span>Reveal Results</span>
-          </button>
+          {/* Reveal Button Slot - Button appears on first Space press */}
+          <div className="button-slot">
+            {isButtonVisible && (
+              <button
+                id="reveal-results-button"
+                type="button"
+                onClick={handleReveal}
+                className="reveal-btn button-entrance"
+                autoFocus
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                <span>Reveal Results</span>
+              </button>
+            )}
+          </div>
         </section>
       ) : (
         /* SCREEN 2: Winner Reveal Screen */
@@ -287,13 +332,13 @@ export default function HackathonRevealPage() {
 
       {/* Filmmaking Retake Controls & Shortcuts */}
       <div className="director-bar" title="Production Retake Controls">
-        {isRevealed && (
+        {(isRevealed || isButtonVisible) && (
           <button
             id="reset-button"
             type="button"
             onClick={handleReset}
             className="director-btn"
-            title="Reset to Screen 1 for retake (Shortcut: R)"
+            title="Reset to initial poster for retake (Shortcut: R)"
           >
             ↺ Reset Screen [R]
           </button>
@@ -311,7 +356,9 @@ export default function HackathonRevealPage() {
 
       {/* Subtle keyboard reminder for crew */}
       <div className="keyboard-hint">
-        {!isRevealed ? '[Space/Enter] Reveal' : '[R / Esc] Reset for retake'} • [F / F11] Fullscreen
+        {!isButtonVisible && !isRevealed && '[Space] Show Reveal Button • [F / F11] Fullscreen'}
+        {isButtonVisible && !isRevealed && '[Space / Click] Reveal Winners • [R] Reset'}
+        {isRevealed && '[R / Esc] Reset for retake • [F / F11] Fullscreen'}
       </div>
     </main>
   );
