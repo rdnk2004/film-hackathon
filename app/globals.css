@@ -40,6 +40,67 @@
   }
 }
 
+/* Ensure proper fullscreen presentation across all browsers */
+:fullscreen,
+::backdrop,
+:-webkit-full-screen,
+:-moz-full-screen,
+:-ms-fullscreen {
+  background-color: var(--bg-dark) !important;
+}
+
+/* Fallback full viewport mode for embedded environments */
+.viewport-fullscreen-fallback {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+}
+
+/* Main Full Viewport Container */
+.main-viewport {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.main-viewport.simulated-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+}
+
+/* Toast hint when native fullscreen is blocked by browser permissions */
+.fullscreen-toast {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(56, 189, 248, 0.2);
+  color: #f1f5f9;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+  animation: toastFade 3s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes toastFade {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  10%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
 /* Background Atmosphere */
 .ambient-background {
   position: fixed;

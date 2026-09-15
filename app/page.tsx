@@ -9,14 +9,95 @@ const TEAM_MEMBERS = [
   'Sreerag S',
 ];
 
+// Cross-browser Fullscreen helper utilities
+const getFullscreenElement = (): Element | null => {
+  if (typeof document === 'undefined') return null;
+  const doc = document as unknown as {
+    fullscreenElement?: Element;
+    webkitFullscreenElement?: Element;
+    mozFullScreenElement?: Element;
+    msFullscreenElement?: Element;
+  };
+  return (
+    doc.fullscreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.msFullscreenElement ||
+    null
+  );
+};
+
+const enterNativeFullscreen = async (element: HTMLElement = document.documentElement): Promise<void> => {
+  const el = element as unknown as {
+    requestFullscreen?: () => Promise<void>;
+    webkitRequestFullscreen?: () => Promise<void>;
+    mozRequestFullScreen?: () => Promise<void>;
+    msRequestFullscreen?: () => Promise<void>;
+  };
+
+  if (typeof el.requestFullscreen === 'function') {
+    return el.requestFullscreen();
+  } else if (typeof el.webkitRequestFullscreen === 'function') {
+    return el.webkitRequestFullscreen();
+  } else if (typeof el.mozRequestFullScreen === 'function') {
+    return el.mozRequestFullScreen();
+  } else if (typeof el.msRequestFullscreen === 'function') {
+    return el.msRequestFullscreen();
+  }
+  throw new Error('Fullscreen API not supported');
+};
+
+const exitNativeFullscreen = async (): Promise<void> => {
+  const doc = document as unknown as {
+    exitFullscreen?: () => Promise<void>;
+    webkitExitFullscreen?: () => Promise<void>;
+    mozCancelFullScreen?: () => Promise<void>;
+    msExitFullscreen?: () => Promise<void>;
+  };
+
+  if (typeof doc.exitFullscreen === 'function') {
+    return doc.exitFullscreen();
+  } else if (typeof doc.webkitExitFullscreen === 'function') {
+    return doc.webkitExitFullscreen();
+  } else if (typeof doc.mozCancelFullScreen === 'function') {
+    return doc.mozCancelFullScreen();
+  } else if (typeof doc.msExitFullscreen === 'function') {
+    return doc.msExitFullscreen();
+  }
+};
+
 export default function HackathonRevealPage() {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSimulatedFullscreen, setIsSimulatedFullscreen] = useState(false);
+  const [fullscreenNotice, setFullscreenNotice] = useState<string | null>(null);
 
-  // Play a soft cinematic sub-bass/chime sweep on reveal
+  // Sync fullscreen state with native browser events
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const activeEl = getFullscreenElement();
+      setIsFullscreen(Boolean(activeEl) || isSimulatedFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, [isSimulatedFullscreen]);
+
+  // Soft cinematic sub-bass/chime sweep on reveal
   const playCinematicAudio = useCallback(() => {
     try {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
 
       const ctx = new AudioContextClass();
@@ -24,7 +105,6 @@ export default function HackathonRevealPage() {
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      // Low sub bass swell upwards into chime
       osc.frequency.setValueAtTime(110, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
 
@@ -51,13 +131,34 @@ export default function HackathonRevealPage() {
     setIsRevealed(false);
   }, []);
 
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => { });
+  const toggleFullscreen = useCallback(async () => {
+    const activeEl = getFullscreenElement();
+
+    if (activeEl || isSimulatedFullscreen) {
+      // Exit fullscreen
+      try {
+        if (activeEl) {
+          await exitNativeFullscreen();
+        }
+      } catch {
+        // Fallback
+      }
+      setIsSimulatedFullscreen(false);
+      setIsFullscreen(false);
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => { });
+      // Request fullscreen
+      try {
+        await enterNativeFullscreen(document.documentElement);
+        setIsFullscreen(true);
+      } catch {
+        // If native fullscreen is blocked by browser/iframe permissions, activate simulated viewport fullscreen
+        setIsSimulatedFullscreen(true);
+        setIsFullscreen(true);
+        setFullscreenNotice('Native fullscreen restricted — using Full Viewport mode. (Press F11 for hardware fullscreen)');
+        setTimeout(() => setFullscreenNotice(null), 3500);
+      }
     }
-  }, []);
+  }, [isSimulatedFullscreen]);
 
   // Keyboard shortcut handlers for film crew convenience
   useEffect(() => {
@@ -67,8 +168,15 @@ export default function HackathonRevealPage() {
         return;
       }
 
-      if (e.key === 'r' || e.key === 'R' || e.key === 'Escape' || e.key === 'Backspace') {
+      if (e.key === 'r' || e.key === 'R' || e.key === 'Backspace') {
         handleReset();
+      } else if (e.key === 'Escape') {
+        if (isSimulatedFullscreen) {
+          setIsSimulatedFullscreen(false);
+          setIsFullscreen(false);
+        } else {
+          handleReset();
+        }
       } else if ((e.key === 'Enter' || e.key === ' ') && !isRevealed) {
         e.preventDefault();
         handleReveal();
@@ -79,10 +187,10 @@ export default function HackathonRevealPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRevealed, handleReset, handleReveal, toggleFullscreen]);
+  }, [isRevealed, isSimulatedFullscreen, handleReset, handleReveal, toggleFullscreen]);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden select-none">
+    <main className={`main-viewport ${isSimulatedFullscreen ? 'simulated-fullscreen' : ''}`}>
       {/* Dynamic Ambient Background */}
       <div className="ambient-background">
         <div className="ambient-grid" />
@@ -91,6 +199,13 @@ export default function HackathonRevealPage() {
 
       {/* Film Vignette Border */}
       <div className="filmic-vignette" />
+
+      {/* Toast Notice if native fullscreen is blocked */}
+      {fullscreenNotice && (
+        <div className="fullscreen-toast" role="status">
+          {fullscreenNotice}
+        </div>
+      )}
 
       {/* SCREEN 1: Initial Static Landing Poster */}
       {!isRevealed ? (
@@ -184,18 +299,19 @@ export default function HackathonRevealPage() {
           </button>
         )}
         <button
+          id="fullscreen-toggle-btn"
           type="button"
           onClick={toggleFullscreen}
           className="director-btn"
           title="Toggle Fullscreen (Shortcut: F11 or F)"
         >
-          {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen'}
+          {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen [F]'}
         </button>
       </div>
 
       {/* Subtle keyboard reminder for crew */}
       <div className="keyboard-hint">
-        {!isRevealed ? '[Space/Enter] Reveal' : '[R / Esc] Reset for retake'} • [F] Fullscreen
+        {!isRevealed ? '[Space/Enter] Reveal' : '[R / Esc] Reset for retake'} • [F / F11] Fullscreen
       </div>
     </main>
   );
