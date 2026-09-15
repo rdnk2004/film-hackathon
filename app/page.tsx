@@ -353,13 +353,6 @@ export default function HackathonRevealPage() {
           {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen [F]'}
         </button>
       </div>
-
-      {/* Subtle keyboard reminder for crew */}
-      <div className="keyboard-hint">
-        {!isButtonVisible && !isRevealed && '[Space] Show Reveal Button • [F / F11] Fullscreen'}
-        {isButtonVisible && !isRevealed && '[Space / Click] Reveal Winners • [R] Reset'}
-        {isRevealed && '[R / Esc] Reset for retake • [F / F11] Fullscreen'}
-      </div>
     </main>
   );
 }
