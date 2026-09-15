@@ -265,7 +265,7 @@ export default function HackathonRevealPage() {
           <h1 className="hackathon-title">HACK-A-THON</h1>
 
           {/* Subtitle */}
-          <p className="hackathon-subtitle">Day 1 — Ideation Phase Results</p>
+          <p className="hackathon-subtitle">Day 1 — Ideation Phase</p>
 
           {/* Reveal Button Slot - Button appears on first Space press */}
           <div className="button-slot">
