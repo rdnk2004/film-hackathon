@@ -93,7 +93,7 @@ export default function HackathonRevealPage() {
     };
   }, [isSimulatedFullscreen]);
 
-  // Soft cinematic sub-bass/chime sweep on reveal
+  // Soft cinematic sub-bass/chime sweep on reveal - lengthened to match 1.8s visual choreography
   const playCinematicAudio = useCallback(() => {
     try {
       const AudioContextClass =
@@ -106,24 +106,24 @@ export default function HackathonRevealPage() {
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(110, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
+      osc.frequency.setValueAtTime(95, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.9);
 
       gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+      gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.75);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.75);
+      osc.stop(ctx.currentTime + 1.8);
     } catch {
       // Audio is non-blocking and completely optional
     }
   }, []);
 
-  // Soft pop/click tone when button appears
+  // Soft warm tone when button appears - extended to 0.6s
   const playButtonAppearAudio = useCallback(() => {
     try {
       const AudioContextClass =
@@ -136,18 +136,18 @@ export default function HackathonRevealPage() {
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(560, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(280, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(560, ctx.currentTime + 0.4);
 
       gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.2);
+      osc.stop(ctx.currentTime + 0.6);
     } catch {
       // Audio is non-blocking and completely optional
     }

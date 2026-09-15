@@ -170,15 +170,15 @@
   box-sizing: border-box;
 }
 
-/* Smooth Transition animations */
+/* Smooth Transition animations - Extended cinematic duration */
 .screen-fade {
-  animation: fadeInScale 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInScale 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeInScale {
   0% {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.94);
   }
   100% {
     opacity: 1;
@@ -250,17 +250,24 @@
 }
 
 .button-entrance {
-  animation: btnEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: btnEntrance 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes btnEntrance {
   0% {
     opacity: 0;
-    transform: translateY(16px) scale(0.92);
+    transform: translateY(22px) scale(0.92);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 0.85;
+    transform: translateY(3px) scale(0.98);
+    filter: blur(1px);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -345,6 +352,20 @@
   text-transform: uppercase;
   margin-bottom: 1.25rem;
   backdrop-filter: blur(10px);
+  animation: badgeEntrance 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes badgeEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.88);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 .winner-badge .star-icon {
@@ -366,6 +387,24 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 50px rgba(245, 158, 11, 0.45));
+  animation: teamTitleEntrance 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes teamTitleEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.1)) blur(8px);
+  }
+  60% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 75px rgba(245, 158, 11, 0.7)) blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 50px rgba(245, 158, 11, 0.45)) blur(0);
+  }
 }
 
 /* Team members grid - 16:9 widescreen layout */
@@ -402,6 +441,25 @@
   transition: transform 0.2s ease, border-color 0.2s ease;
   position: relative;
   overflow: hidden;
+  animation: memberCardEntrance 1.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.member-card:nth-child(1) { animation-delay: 0.45s; }
+.member-card:nth-child(2) { animation-delay: 0.7s; }
+.member-card:nth-child(3) { animation-delay: 0.95s; }
+.member-card:nth-child(4) { animation-delay: 1.2s; }
+
+@keyframes memberCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 .member-card::before {
@@ -448,6 +506,21 @@
   align-items: center;
   gap: 0.75rem;
   opacity: 0.95;
+  animation: congratsEntrance 1.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 1.45s;
+}
+
+@keyframes congratsEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 /* Filmmaking Utilities / Props Controls */
