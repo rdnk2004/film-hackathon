@@ -1,0 +1,202 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+
+const TEAM_MEMBERS = [
+  'Prithvin',
+  'Sreerag Belraj',
+  'Aldrin',
+  'Sreerag S',
+];
+
+export default function HackathonRevealPage() {
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Play a soft cinematic sub-bass/chime sweep on reveal
+  const playCinematicAudio = useCallback(() => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      // Low sub bass swell upwards into chime
+      osc.frequency.setValueAtTime(110, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
+
+      gain.gain.setValueAtTime(0.01, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.75);
+    } catch {
+      // Audio is non-blocking and completely optional
+    }
+  }, []);
+
+  const handleReveal = useCallback(() => {
+    playCinematicAudio();
+    setIsRevealed(true);
+  }, [playCinematicAudio]);
+
+  const handleReset = useCallback(() => {
+    setIsRevealed(false);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => { });
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => { });
+    }
+  }, []);
+
+  // Keyboard shortcut handlers for film crew convenience
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing into an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === 'r' || e.key === 'R' || e.key === 'Escape' || e.key === 'Backspace') {
+        handleReset();
+      } else if ((e.key === 'Enter' || e.key === ' ') && !isRevealed) {
+        e.preventDefault();
+        handleReveal();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isRevealed, handleReset, handleReveal, toggleFullscreen]);
+
+  return (
+    <main className="relative w-screen h-screen overflow-hidden select-none">
+      {/* Dynamic Ambient Background */}
+      <div className="ambient-background">
+        <div className="ambient-grid" />
+        <div className={`glow-orb ${isRevealed ? 'winner-state' : ''}`} />
+      </div>
+
+      {/* Film Vignette Border */}
+      <div className="filmic-vignette" />
+
+      {/* SCREEN 1: Initial Static Landing Poster */}
+      {!isRevealed ? (
+        <section
+          key="screen-landing"
+          className="screen-container screen-fade"
+          aria-label="Hackathon Introduction"
+        >
+          {/* Eyebrow */}
+          <div className="eyebrow-badge">
+            <span className="status-dot" />
+            <span>RCSS — DEPARTMENT OF COMPUTER SCIENCE PRESENTS</span>
+          </div>
+
+          {/* Main Title */}
+          <h1 className="hackathon-title">HACK-A-THON</h1>
+
+          {/* Subtitle */}
+          <p className="hackathon-subtitle">Day 1 — Ideation Phase Results</p>
+
+          {/* Reveal Button */}
+          <button
+            id="reveal-results-button"
+            type="button"
+            onClick={handleReveal}
+            className="reveal-btn"
+            autoFocus
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <span>Reveal Results</span>
+          </button>
+        </section>
+      ) : (
+        /* SCREEN 2: Winner Reveal Screen */
+        <section
+          key="screen-winner"
+          className="screen-container screen-fade"
+          aria-label="Winner Results Announcement"
+        >
+          {/* Category / Phase Badge */}
+          <div className="winner-badge">
+            <span className="star-icon">★</span>
+            <span>WINNER — IDEATION PHASE</span>
+            <span className="star-icon">★</span>
+          </div>
+
+          {/* Team Name - Primary Focal Point */}
+          <h1 className="team-title">TEAM 5</h1>
+
+          {/* 4 Team Members Grid */}
+          <div className="team-members-container">
+            {TEAM_MEMBERS.map((name, index) => (
+              <div key={name} className="member-card">
+                <span className="member-number">MEMBER 0{index + 1}</span>
+                <span className="member-name">{name}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Congratulatory line */}
+          <div className="congrats-line">
+            <span>✨</span>
+            <span>Congratulations!</span>
+            <span>✨</span>
+          </div>
+        </section>
+      )}
+
+      {/* Filmmaking Retake Controls & Shortcuts */}
+      <div className="director-bar" title="Production Retake Controls">
+        {isRevealed && (
+          <button
+            id="reset-button"
+            type="button"
+            onClick={handleReset}
+            className="director-btn"
+            title="Reset to Screen 1 for retake (Shortcut: R)"
+          >
+            ↺ Reset Screen [R]
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className="director-btn"
+          title="Toggle Fullscreen (Shortcut: F11 or F)"
+        >
+          {isFullscreen ? 'Exit Fullscreen' : '⛶ Fullscreen'}
+        </button>
+      </div>
+
+      {/* Subtle keyboard reminder for crew */}
+      <div className="keyboard-hint">
+        {!isRevealed ? '[Space/Enter] Reveal' : '[R / Esc] Reset for retake'} • [F] Fullscreen
+      </div>
+    </main>
+  );
+}
